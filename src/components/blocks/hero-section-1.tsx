@@ -166,7 +166,7 @@ export function HeroSection() {
                 <section className="bg-background pb-16 pt-16 md:pb-32">
                     <div className="group relative m-auto max-w-5xl px-6">
                         <div className="absolute inset-0 z-10 flex scale-95 items-center justify-center opacity-0 duration-500 group-hover:scale-100 group-hover:opacity-100">
-                            <Link to="/testimonials" className="block text-sm duration-150 hover:opacity-75">
+                            <Link to="/contact" className="block text-sm duration-150 hover:opacity-75">
                                 <span> Meet Our Customers</span>
                                 <ChevronRight className="ml-1 inline-block size-3" />
                             </Link>
@@ -208,7 +208,7 @@ export function HeroSection() {
 const menuItems = [
     { name: 'Features', href: '#features' },
     { name: 'Pricing', href: '#pricing' },
-    { name: 'Testimonials', href: '#testimonials' },
+    { name: 'Contact', href: '/contact' },
     { name: 'About', href: '/about' },
 ];
 

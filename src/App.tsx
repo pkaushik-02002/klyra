@@ -26,6 +26,7 @@ import About from "./pages/About";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Documentation from "./pages/Documentation";
+import Contact from "./pages/Contact";
 
 const queryClient = new QueryClient();
 
@@ -86,6 +87,7 @@ const AppRoutes = () => {
       <Route path="/terms" element={<Terms />} />
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/docs" element={<Documentation />} />
+      <Route path="/contact" element={<Contact />} />
       {/* Dashboard Routes */}
       <Route path="/app" element={
         <ProtectedRoute>
