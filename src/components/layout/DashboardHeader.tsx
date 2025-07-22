@@ -16,11 +16,13 @@ import { useTheme } from "@/components/theme-provider";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/use-firebase";
 import { useNavigate } from "react-router-dom";
+import { useReminders } from '@/hooks/use-firebase';
 
 export function DashboardHeader() {
   const { theme, setTheme } = useTheme();
   const { user, signOut } = useAuthContext();
   const { profile, loading: profileLoading } = useUserProfile(user?.uid || null);
+  const { reminders, loading: remindersLoading } = useReminders(user?.uid || null);
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -101,27 +103,32 @@ export function DashboardHeader() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="relative">
                 <Bell className="h-4 w-4" />
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs bg-primary">
-                  3
-                </Badge>
+                {reminders && reminders.length > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs bg-primary">
+                    {reminders.length}
+                  </Badge>
+                )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80">
               <div className="p-4">
                 <h3 className="font-semibold mb-2">Notifications</h3>
                 <div className="space-y-2">
-                  <div className="p-2 rounded-lg bg-muted/50">
-                    <p className="text-sm font-medium">Netflix payment due tomorrow</p>
-                    <p className="text-xs text-muted-foreground">$15.99 • Monthly</p>
-                  </div>
-                  <div className="p-2 rounded-lg bg-muted/50">
-                    <p className="text-sm font-medium">Spotify payment processed</p>
-                    <p className="text-xs text-muted-foreground">$9.99 • Today</p>
-                  </div>
-                  <div className="p-2 rounded-lg bg-muted/50">
-                    <p className="text-sm font-medium">Adobe Creative Cloud renewal</p>
-                    <p className="text-xs text-muted-foreground">$52.99 • In 3 days</p>
-                  </div>
+                  {remindersLoading ? (
+                    <div className="text-sm text-muted-foreground">Loading...</div>
+                  ) : reminders && reminders.length > 0 ? (
+                    reminders.slice(0, 3).map((reminder) => (
+                      <div key={reminder.id} className="p-2 rounded-lg bg-muted/50">
+                        <p className="text-sm font-medium">{reminder.title || reminder.name || 'Reminder'}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {reminder.dueDate ? new Date(reminder.dueDate).toLocaleDateString() : ''}
+                          {reminder.amount ? ` • $${reminder.amount}` : ''}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-sm text-muted-foreground">No notifications</div>
+                  )}
                 </div>
               </div>
             </DropdownMenuContent>
