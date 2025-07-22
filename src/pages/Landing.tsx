@@ -103,28 +103,7 @@ export default function Landing() {
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">Features</h2>
             <p className="text-base md:text-lg text-muted-foreground">Discover what makes Klyra the best way to manage your subscriptions.</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
-            <div className="flex flex-col items-center text-center bg-white dark:bg-neutral-900 rounded-xl p-6 shadow-md">
-              <Star className="h-8 w-8 text-yellow-400 mb-2" />
-              <h3 className="font-semibold text-lg mb-1">Intuitive & Beautiful Design</h3>
-              <p className="text-muted-foreground text-sm">Enjoy a seamless, delightful experience on any device—mobile, tablet, or desktop.</p>
-            </div>
-            <div className="flex flex-col items-center text-center bg-white dark:bg-neutral-900 rounded-xl p-6 shadow-md">
-              <CheckCircle className="h-8 w-8 text-green-500 mb-2" />
-              <h3 className="font-semibold text-lg mb-1">No More Surprises</h3>
-              <p className="text-muted-foreground text-sm">Stay ahead of renewals and price hikes. Klyra keeps you informed and in control.</p>
-            </div>
-            <div className="flex flex-col items-center text-center bg-white dark:bg-neutral-900 rounded-xl p-6 shadow-md">
-              <BarChart className="h-8 w-8 text-primary mb-2" />
-              <h3 className="font-semibold text-lg mb-1">Actionable Insights</h3>
-              <p className="text-muted-foreground text-sm">Get smart analytics to optimize your spending and discover where you can save.</p>
-            </div>
-            <div className="flex flex-col items-center text-center bg-white dark:bg-neutral-900 rounded-xl p-6 shadow-md">
-              <Shield className="h-8 w-8 text-primary mb-2" />
-              <h3 className="font-semibold text-lg mb-1">Trusted & Secure</h3>
-              <p className="text-muted-foreground text-sm">We use industry-leading security to protect your data. Your privacy is never compromised.</p>
-            </div>
-          </div>
+          <FeaturesSectionWithHoverEffects />
         </div>
       </section>
 
