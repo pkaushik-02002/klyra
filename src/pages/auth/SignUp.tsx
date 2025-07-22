@@ -8,10 +8,12 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 export default function SignUp() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signUp, signInWithGoogle } = useAuthContext();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -57,23 +59,34 @@ export default function SignUp() {
     setLoading(true);
     
     try {
-      // TODO: Integrate with Firebase Auth
-      console.log("Sign up with:", formData);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await signUp(formData.email, formData.password, formData.name);
       
       toast({
         title: "Account created!",
-        description: "Welcome to SubTracker. You can now start tracking your subscriptions.",
+        description: "Welcome to Klyra. You can now start tracking your subscriptions.",
       });
       
-      navigate("/app");
-    } catch (error) {
+      // Wait a moment for auth state to update, then redirect
+      console.log("Waiting for auth state to update...");
+      setTimeout(() => {
+        console.log("Redirecting to /app...");
+        window.location.href = "/app";
+      }, 1000);
+    } catch (error: any) {
+      let errorMessage = "Something went wrong. Please try again.";
+      
+      if (error.code === "auth/email-already-in-use") {
+        errorMessage = "An account with this email already exists.";
+      } else if (error.code === "auth/weak-password") {
+        errorMessage = "Password is too weak. Please choose a stronger password.";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "Please enter a valid email address.";
+      }
+      
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Something went wrong. Please try again.",
+        description: errorMessage,
       });
     } finally {
       setLoading(false);
@@ -83,18 +96,24 @@ export default function SignUp() {
   const handleGoogleSignUp = async () => {
     setLoading(true);
     try {
-      // TODO: Integrate with Firebase Auth Google provider
-      console.log("Sign up with Google");
+      const user = await signInWithGoogle();
+      console.log("Google sign-up successful, user:", user.email);
       
-      toast({
-        title: "Google sign up",
-        description: "This feature will be available soon!",
-      });
-    } catch (error) {
+      // Don't show toast here since the redirect will happen automatically
+      // The App.tsx will handle the success toast and navigation
+    } catch (error: any) {
+      let errorMessage = "Failed to sign up with Google.";
+      
+      if (error.code === "auth/popup-closed-by-user") {
+        errorMessage = "Sign-up was cancelled.";
+      } else if (error.code === "auth/popup-blocked") {
+        errorMessage = "Popup was blocked. Please allow popups for this site.";
+      }
+      
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to sign up with Google.",
+        description: errorMessage,
       });
     } finally {
       setLoading(false);
@@ -216,6 +235,12 @@ export default function SignUp() {
               >
                 {loading ? "Creating Account..." : "Create Account"}
               </Button>
+              <p className="mt-4 text-xs text-muted-foreground text-center">
+                By creating an account, you agree to our <a href="/terms" className="underline text-primary">Terms and Conditions</a>.
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground text-center">
+                Read our <a href="/privacy" className="underline text-primary">Privacy Policy</a>.
+              </p>
             </form>
 
             <div className="relative">

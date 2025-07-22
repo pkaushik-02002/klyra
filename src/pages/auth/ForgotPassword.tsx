@@ -7,10 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Mail, ArrowLeft, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { resetPassword } = useAuthContext();
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [email, setEmail] = useState("");
@@ -33,23 +35,27 @@ export default function ForgotPassword() {
     setError("");
     
     try {
-      // TODO: Integrate with Firebase Auth password reset
-      console.log("Password reset for:", email);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await resetPassword(email);
       
       setEmailSent(true);
       toast({
         title: "Reset email sent!",
         description: "Check your inbox for password reset instructions.",
       });
-    } catch (error) {
-      setError("Something went wrong. Please try again.");
+    } catch (error: any) {
+      let errorMessage = "Something went wrong. Please try again.";
+      
+      if (error.code === "auth/user-not-found") {
+        errorMessage = "No account found with this email address.";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "Please enter a valid email address.";
+      }
+      
+      setError(errorMessage);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to send reset email.",
+        description: errorMessage,
       });
     } finally {
       setLoading(false);

@@ -7,10 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, Mail, Lock, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuthContext } from "@/contexts/AuthContext";
 
-export default function Login() {
+const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn, signInWithGoogle } = useAuthContext();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -44,23 +46,37 @@ export default function Login() {
     setLoading(true);
     
     try {
-      // TODO: Integrate with Firebase Auth
-      console.log("Login with:", formData);
+      console.log("Attempting to sign in with:", formData.email);
+      await signIn(formData.email, formData.password);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      console.log("Sign in successful, showing toast and redirecting...");
       toast({
         title: "Welcome back!",
-        description: "You've successfully signed in to SubTracker.",
+        description: "You've successfully signed in to Klyra.",
       });
       
-      navigate("/app");
-    } catch (error) {
+      // Wait a moment for auth state to update, then redirect
+      console.log("Waiting for auth state to update...");
+      setTimeout(() => {
+        console.log("Redirecting to /app...");
+        window.location.href = "/app";
+      }, 1000);
+    } catch (error: any) {
+      console.error("Sign in error:", error);
+      let errorMessage = "Invalid email or password. Please try again.";
+      
+      if (error.code === "auth/user-not-found") {
+        errorMessage = "No account found with this email address.";
+      } else if (error.code === "auth/wrong-password") {
+        errorMessage = "Incorrect password. Please try again.";
+      } else if (error.code === "auth/too-many-requests") {
+        errorMessage = "Too many failed attempts. Please try again later.";
+      }
+      
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Invalid email or password. Please try again.",
+        description: errorMessage,
       });
     } finally {
       setLoading(false);
@@ -70,18 +86,24 @@ export default function Login() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      // TODO: Integrate with Firebase Auth Google provider
-      console.log("Sign in with Google");
+      const user = await signInWithGoogle();
+      console.log("Google sign-in successful, user:", user.email);
       
-      toast({
-        title: "Google sign in",
-        description: "This feature will be available soon!",
-      });
-    } catch (error) {
+      // Don't show toast here since the redirect will happen automatically
+      // The App.tsx will handle the success toast and navigation
+    } catch (error: any) {
+      let errorMessage = "Failed to sign in with Google.";
+      
+      if (error.code === "auth/popup-closed-by-user") {
+        errorMessage = "Sign-in was cancelled.";
+      } else if (error.code === "auth/popup-blocked") {
+        errorMessage = "Popup was blocked. Please allow popups for this site.";
+      }
+      
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to sign in with Google.",
+        description: errorMessage,
       });
     } finally {
       setLoading(false);
@@ -105,7 +127,7 @@ export default function Login() {
           <CardHeader className="text-center space-y-2">
             <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
             <CardDescription>
-              Sign in to your SubTracker account
+              Sign in to your Klyra account
             </CardDescription>
           </CardHeader>
           
@@ -175,6 +197,12 @@ export default function Login() {
               >
                 {loading ? "Signing In..." : "Sign In"}
               </Button>
+              <p className="mt-4 text-xs text-muted-foreground text-center">
+                By logging in, you agree to our <a href="/terms" className="underline text-primary">Terms and Conditions</a>.
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground text-center">
+                Read our <a href="/privacy" className="underline text-primary">Privacy Policy</a>.
+              </p>
             </form>
 
             <div className="relative">
@@ -229,4 +257,6 @@ export default function Login() {
       </div>
     </div>
   );
-}
+};
+
+export default Login;

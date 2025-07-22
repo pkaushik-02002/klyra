@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,46 +14,13 @@ import {
   Plus,
   Settings
 } from "lucide-react";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { useReminders } from "@/hooks/use-firebase";
+import { useSubscriptions } from "@/hooks/use-firebase";
+import { useToast } from "@/hooks/use-toast";
+import { AddReminderModal } from "@/components/AddReminderModal";
 
-// Mock reminders data
-const upcomingPayments = [
-  {
-    id: "1",
-    service: "Netflix",
-    amount: 15.99,
-    dueDate: new Date("2024-01-15"),
-    daysUntil: 1,
-    category: "Entertainment",
-    status: "due-soon"
-  },
-  {
-    id: "2", 
-    service: "Spotify Premium",
-    amount: 9.99,
-    dueDate: new Date("2024-01-18"),
-    daysUntil: 4,
-    category: "Entertainment",
-    status: "upcoming"
-  },
-  {
-    id: "3",
-    service: "Adobe Creative Cloud", 
-    amount: 52.99,
-    dueDate: new Date("2024-01-20"),
-    daysUntil: 6,
-    category: "Productivity",
-    status: "upcoming"
-  },
-  {
-    id: "4",
-    service: "Google Drive",
-    amount: 9.99,
-    dueDate: new Date("2024-01-25"),
-    daysUntil: 11,
-    category: "Storage", 
-    status: "scheduled"
-  }
-];
+// Dynamic data will be calculated from subscriptions and reminders
 
 const notificationSettings = [
   {
@@ -88,8 +55,13 @@ const notificationSettings = [
 ];
 
 export default function Reminders() {
+  const { user } = useAuthContext();
+  const { reminders, loading: remindersLoading, deleteReminder, updateReminder } = useReminders(user?.uid || null);
+  const { subscriptions } = useSubscriptions(user?.uid || null);
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [settings, setSettings] = useState(notificationSettings);
+  const [upcomingPayments, setUpcomingPayments] = useState<any[]>([]);
 
   const toggleSetting = (id: string) => {
     setSettings(prev => prev.map(setting => 
@@ -97,6 +69,38 @@ export default function Reminders() {
         ? { ...setting, enabled: !setting.enabled }
         : setting
     ));
+  };
+
+  const handleDeleteReminder = async (id: string) => {
+    try {
+      await deleteReminder(id);
+      toast({
+        title: "Reminder deleted",
+        description: "The reminder has been successfully removed.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete reminder. Please try again.",
+      });
+    }
+  };
+
+  const handleUpdateReminderStatus = async (id: string, newStatus: "Pending" | "Sent" | "Dismissed") => {
+    try {
+      await updateReminder(id, { status: newStatus });
+      toast({
+        title: "Status updated",
+        description: "The reminder status has been updated.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update reminder status. Please try again.",
+      });
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -114,6 +118,37 @@ export default function Reminders() {
     return `Due in ${daysUntil} days`;
   };
 
+  // Calculate upcoming payments from subscriptions
+  useEffect(() => {
+    if (subscriptions.length > 0) {
+      const today = new Date();
+      const payments = subscriptions
+        .filter(sub => sub.status === "Active")
+        .map(sub => {
+          const dueDate = new Date(sub.nextDue);
+          const daysUntil = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          
+          let status = "scheduled";
+          if (daysUntil <= 1) status = "due-soon";
+          else if (daysUntil <= 7) status = "upcoming";
+          
+          return {
+            id: sub.id,
+            service: sub.name,
+            amount: sub.price,
+            dueDate: dueDate,
+            daysUntil: daysUntil,
+            category: sub.category,
+            status: status
+          };
+        })
+        .filter(payment => payment.daysUntil >= 0) // Only future payments
+        .sort((a, b) => a.daysUntil - b.daysUntil); // Sort by due date
+      
+      setUpcomingPayments(payments);
+    }
+  }, [subscriptions]);
+
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -125,10 +160,7 @@ export default function Reminders() {
           </p>
         </div>
         
-        <Button className="premium-button">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Reminder
-        </Button>
+        {user?.uid && <AddReminderModal userId={user.uid} />}
       </div>
 
       {/* Quick Stats */}
@@ -138,7 +170,9 @@ export default function Reminders() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Due This Week</p>
-                <p className="text-2xl font-bold">2</p>
+                <p className="text-2xl font-bold">
+                  {upcomingPayments.filter(payment => payment.daysUntil <= 7).length}
+                </p>
               </div>
               <div className="h-12 w-12 rounded-lg bg-warning/10 flex items-center justify-center">
                 <Clock className="h-6 w-6 text-warning" />
@@ -152,7 +186,9 @@ export default function Reminders() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">This Month</p>
-                <p className="text-2xl font-bold">4</p>
+                <p className="text-2xl font-bold">
+                  {upcomingPayments.filter(payment => payment.daysUntil <= 30).length}
+                </p>
               </div>
               <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
                 <CalendarIcon className="h-6 w-6 text-primary" />
@@ -166,7 +202,7 @@ export default function Reminders() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Active Reminders</p>
-                <p className="text-2xl font-bold">8</p>
+                <p className="text-2xl font-bold">{reminders.length}</p>
               </div>
               <div className="h-12 w-12 rounded-lg bg-success/10 flex items-center justify-center">
                 <Bell className="h-6 w-6 text-success" />
@@ -184,31 +220,39 @@ export default function Reminders() {
             <CardDescription>Your next subscription payments</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {upcomingPayments.map((payment) => (
-              <div key={payment.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center text-white font-semibold">
-                    {payment.service.charAt(0)}
+            {upcomingPayments.length > 0 ? (
+              upcomingPayments.map((payment) => (
+                <div key={payment.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center text-white font-semibold">
+                      {payment.service.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-medium">{payment.service}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {payment.dueDate.toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium">{payment.service}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {payment.dueDate.toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
-                    </p>
+                  <div className="text-right">
+                    <p className="font-medium">${payment.amount}</p>
+                    <Badge className={getStatusColor(payment.status)}>
+                      {getStatusText(payment.daysUntil)}
+                    </Badge>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-medium">${payment.amount}</p>
-                  <Badge className={getStatusColor(payment.status)}>
-                    {getStatusText(payment.daysUntil)}
-                  </Badge>
-                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <CalendarIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>No upcoming payments</p>
+                <p className="text-sm">Add subscriptions to see payment reminders</p>
               </div>
-            ))}
+            )}
           </CardContent>
         </Card>
 

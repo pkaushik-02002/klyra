@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,18 +29,41 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 import { useToast } from "@/hooks/use-toast";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/hooks/use-firebase";
+import { useSubscriptions } from "@/hooks/use-firebase";
+import { useReminders } from "@/hooks/use-firebase";
 
 export default function Settings() {
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
+  const { user, signOut } = useAuthContext();
+  const { profile, updateProfile } = useUserProfile(user?.uid || null);
+  const { subscriptions } = useSubscriptions(user?.uid || null);
+  const { reminders } = useReminders(user?.uid || null);
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState({
-    name: "John Doe",
-    email: "john@example.com",
-    phone: "+1 (555) 123-4567",
+    name: "",
+    email: "",
+    phone: "",
     timezone: "America/New_York",
-    currency: "USD"
+    currency: "USD",
+    monthlyBudget: ""
   });
+
+  // Update profile data when user profile loads
+  useEffect(() => {
+    if (profile) {
+      setProfileData({
+        name: profile.displayName || "",
+        email: profile.email || "",
+        phone: "",
+        timezone: "America/New_York",
+        currency: profile.currency || "USD",
+        monthlyBudget: profile.monthlyBudget?.toString() || ""
+      });
+    }
+  }, [profile]);
 
   const [notifications, setNotifications] = useState({
     email: true,
@@ -60,15 +83,18 @@ export default function Settings() {
     setLoading(true);
     
     try {
-      // TODO: Update profile with Firebase
-      console.log("Updating profile:", profileData);
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been successfully updated.",
-      });
+      if (user?.uid) {
+        await updateProfile({
+          displayName: profileData.name,
+          currency: profileData.currency,
+          monthlyBudget: profileData.monthlyBudget ? parseFloat(profileData.monthlyBudget) : undefined
+        });
+        
+        toast({
+          title: "Profile updated",
+          description: "Your profile has been successfully updated.",
+        });
+      }
     } catch (error) {
       toast({
         variant: "destructive",
@@ -80,12 +106,126 @@ export default function Settings() {
     }
   };
 
-  const handleExportData = (format: 'csv' | 'pdf') => {
-    // TODO: Implement data export
-    toast({
-      title: `${format.toUpperCase()} Export`,
-      description: "Your data export will be ready shortly and sent to your email.",
+  const handleExportData = (format: 'csv' | 'json') => {
+    try {
+      const exportData = {
+        user: {
+          displayName: profile?.displayName || user?.displayName,
+          email: profile?.email || user?.email,
+          currency: profile?.currency || "USD",
+          monthlyBudget: profile?.monthlyBudget || 0,
+          exportDate: new Date().toISOString()
+        },
+        subscriptions: subscriptions.map(sub => ({
+          id: sub.id,
+          name: sub.name,
+          category: sub.category,
+          price: sub.price,
+          billing: sub.billing,
+          nextDue: sub.nextDue,
+          status: sub.status,
+          description: sub.description,
+          website: sub.website,
+          createdAt: sub.createdAt,
+          updatedAt: sub.updatedAt
+        })),
+        reminders: reminders.map(reminder => ({
+          id: reminder.id,
+          subscriptionId: reminder.subscriptionId,
+          subscriptionName: reminder.subscriptionName,
+          dueDate: reminder.dueDate,
+          amount: reminder.amount,
+          status: reminder.status,
+          createdAt: reminder.createdAt
+        })),
+        summary: {
+          totalSubscriptions: subscriptions.length,
+          activeSubscriptions: subscriptions.filter(sub => sub.status === "Active").length,
+          totalMonthlySpend: subscriptions
+            .filter(sub => sub.status === "Active")
+            .reduce((total, sub) => {
+              if (sub.billing === "Monthly") return total + sub.price;
+              if (sub.billing === "Yearly") return total + (sub.price / 12);
+              if (sub.billing === "Weekly") return total + (sub.price * 4);
+              return total;
+            }, 0),
+          totalReminders: reminders.length,
+          pendingReminders: reminders.filter(r => r.status === "Pending").length
+        }
+      };
+
+      if (format === 'csv') {
+        // Export as CSV
+        const csvContent = generateCSV(exportData);
+        downloadFile(csvContent, `subscription-data-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+      } else if (format === 'json') {
+        // Export as JSON
+        const jsonContent = JSON.stringify(exportData, null, 2);
+        downloadFile(jsonContent, `subscription-data-${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+      }
+
+      toast({
+        title: "Export Successful",
+        description: `Your data has been exported as ${format.toUpperCase()}.`,
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Export Failed",
+        description: "Failed to export data. Please try again.",
+      });
+    }
+  };
+
+  const generateCSV = (data: any) => {
+    const lines = [];
+    
+    // User info
+    lines.push('User Information');
+    lines.push(`Name,${data.user.displayName || 'N/A'}`);
+    lines.push(`Email,${data.user.email || 'N/A'}`);
+    lines.push(`Currency,${data.user.currency}`);
+    lines.push(`Monthly Budget,${data.user.monthlyBudget}`);
+    lines.push(`Export Date,${data.user.exportDate}`);
+    lines.push('');
+    
+    // Summary
+    lines.push('Summary');
+    lines.push(`Total Subscriptions,${data.summary.totalSubscriptions}`);
+    lines.push(`Active Subscriptions,${data.summary.activeSubscriptions}`);
+    lines.push(`Total Monthly Spend,${data.summary.totalMonthlySpend.toFixed(2)}`);
+    lines.push(`Total Reminders,${data.summary.totalReminders}`);
+    lines.push(`Pending Reminders,${data.summary.pendingReminders}`);
+    lines.push('');
+    
+    // Subscriptions
+    lines.push('Subscriptions');
+    lines.push('Name,Category,Price,Billing,Next Due,Status,Description,Website');
+    data.subscriptions.forEach((sub: any) => {
+      lines.push(`${sub.name},${sub.category},${sub.price},${sub.billing},${sub.nextDue},${sub.status},${sub.description || ''},${sub.website || ''}`);
     });
+    lines.push('');
+    
+    // Reminders
+    lines.push('Reminders');
+    lines.push('Subscription,Due Date,Amount,Status');
+    data.reminders.forEach((reminder: any) => {
+      lines.push(`${reminder.subscriptionName},${reminder.dueDate},${reminder.amount},${reminder.status}`);
+    });
+    
+    return lines.join('\n');
+  };
+
+  const downloadFile = (content: string, filename: string, mimeType: string) => {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const handleDeleteAccount = () => {
@@ -120,9 +260,14 @@ export default function Settings() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center gap-4">
-            <Avatar className="h-20 w-20">
-              <AvatarImage src="/avatars/01.png" alt="Profile" />
-              <AvatarFallback className="text-lg">JD</AvatarFallback>
+            <Avatar className="h-20 w-20 border-2 border-primary/10">
+              <AvatarImage 
+                src={profile?.photoURL || user?.photoURL} 
+                alt={profile?.displayName || user?.displayName || "Profile"} 
+              />
+              <AvatarFallback className="text-lg bg-gradient-to-br from-primary/10 to-primary/20 text-primary font-semibold">
+                {(profile?.displayName || user?.displayName || "U").split(' ').map(n => n[0]).join('').toUpperCase()}
+              </AvatarFallback>
             </Avatar>
             <div className="space-y-2">
               <Button variant="outline" size="sm">
@@ -203,6 +348,22 @@ export default function Settings() {
                   <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="monthlyBudget">Monthly Budget</Label>
+              <Input
+                id="monthlyBudget"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                value={profileData.monthlyBudget}
+                onChange={(e) => setProfileData({ ...profileData, monthlyBudget: e.target.value })}
+                className="premium-input w-48"
+              />
+              <p className="text-xs text-muted-foreground">
+                Set your monthly budget to track spending against your limit
+              </p>
             </div>
 
             <Button type="submit" className="premium-button" disabled={loading}>
@@ -389,7 +550,7 @@ export default function Settings() {
             <div>
               <h4 className="font-medium mb-2">Export Data</h4>
               <p className="text-sm text-muted-foreground mb-4">
-                Download your subscription data in various formats
+                Download your subscription data in CSV or JSON format
               </p>
               <div className="flex gap-2">
                 <Button 
@@ -403,10 +564,10 @@ export default function Settings() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => handleExportData('pdf')}
+                  onClick={() => handleExportData('json')}
                 >
                   <Download className="h-4 w-4 mr-2" />
-                  Export PDF
+                  Export JSON
                 </Button>
               </div>
             </div>

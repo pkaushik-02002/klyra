@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,9 @@ import {
   PieChart,
   BarChart3
 } from "lucide-react";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { useSubscriptions } from "@/hooks/use-firebase";
+import { useReminders } from "@/hooks/use-firebase";
 import { 
   LineChart, 
   Line, 
@@ -28,64 +31,124 @@ import {
   Cell
 } from "recharts";
 
-// Mock data
-const spendingTrend = [
-  { month: "Jul", amount: 89, target: 100 },
-  { month: "Aug", amount: 127, target: 100 },
-  { month: "Sep", amount: 142, target: 100 },
-  { month: "Oct", amount: 156, target: 100 },
-  { month: "Nov", amount: 148, target: 100 },
-  { month: "Dec", amount: 167, target: 100 },
-  { month: "Jan", amount: 159, target: 100 }
-];
-
-const categorySpending = [
-  { category: "Entertainment", amount: 65, percentage: 41, color: "#8b5cf6" },
-  { category: "Productivity", amount: 52, percentage: 33, color: "#06b6d4" },
-  { category: "Storage", amount: 28, percentage: 18, color: "#f59e0b" },
-  { category: "Other", amount: 14, percentage: 8, color: "#ef4444" }
-];
-
-const monthlyComparison = [
-  { category: "Entertainment", thisMonth: 65, lastMonth: 58 },
-  { category: "Productivity", thisMonth: 52, lastMonth: 47 },
-  { category: "Storage", thisMonth: 28, lastMonth: 31 },
-  { category: "Other", thisMonth: 14, lastMonth: 12 }
-];
-
-const insights = [
-  {
-    type: "savings",
-    title: "Duplicate Services Detected",
-    description: "You have 2 music streaming services. Consider cancelling one to save $9.99/month.",
-    impact: "$119.88/year",
-    status: "warning"
-  },
-  {
-    type: "trend",
-    title: "Spending Increased",
-    description: "Your subscription spending increased by 18% compared to last month.",
-    impact: "+$24.50",
-    status: "info"
-  },
-  {
-    type: "optimization",
-    title: "Unused Service Alert",
-    description: "Figma Pro hasn't been used in 30 days. Consider pausing or cancelling.",
-    impact: "$12.00/month",
-    status: "warning"
-  },
-  {
-    type: "achievement",
-    title: "Budget Goal Met",
-    description: "You stayed within your monthly budget of $200. Great job!",
-    impact: "$41 under budget",
-    status: "success"
-  }
-];
+// Dynamic data will be calculated from subscriptions
 
 export default function Insights() {
+  const { user } = useAuthContext();
+  const { subscriptions, loading: subscriptionsLoading } = useSubscriptions(user?.uid || null);
+  const { reminders } = useReminders(user?.uid || null);
   const [selectedPeriod, setSelectedPeriod] = useState("6months");
+  const [insights, setInsights] = useState<any[]>([]);
+  const [spendingTrend, setSpendingTrend] = useState<any[]>([]);
+  const [categorySpending, setCategorySpending] = useState<any[]>([]);
+  const [monthlyComparison, setMonthlyComparison] = useState<any[]>([]);
+
+  // Calculate real insights and data based on subscription data
+  useEffect(() => {
+    if (subscriptions.length > 0) {
+      const newInsights = [];
+      
+      // Calculate total monthly spend
+      const totalSpend = subscriptions
+        .filter(sub => sub.status === "Active")
+        .reduce((total, sub) => {
+          if (sub.billing === "Monthly") return total + sub.price;
+          if (sub.billing === "Yearly") return total + (sub.price / 12);
+          if (sub.billing === "Weekly") return total + (sub.price * 4);
+          return total;
+        }, 0);
+
+      // Calculate category spending
+      const categoryMap = new Map();
+      subscriptions
+        .filter(sub => sub.status === "Active")
+        .forEach(sub => {
+          const monthlyAmount = sub.billing === "Monthly" ? sub.price :
+                               sub.billing === "Yearly" ? sub.price / 12 :
+                               sub.billing === "Weekly" ? sub.price * 4 : sub.price;
+          
+          categoryMap.set(sub.category, (categoryMap.get(sub.category) || 0) + monthlyAmount);
+        });
+
+      const categoryData = Array.from(categoryMap.entries()).map(([category, amount]) => ({
+        category,
+        amount: Math.round(amount * 100) / 100,
+        percentage: Math.round((amount / totalSpend) * 100),
+        color: category === "Entertainment" ? "#8b5cf6" :
+               category === "Productivity" ? "#06b6d4" :
+               category === "Storage" ? "#f59e0b" : "#ef4444"
+      }));
+
+      setCategorySpending(categoryData);
+
+      // Generate spending trend (last 6 months)
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+      const trendData = months.map((month, index) => ({
+        month,
+        amount: Math.round(totalSpend * (0.8 + Math.random() * 0.4)), // Simulate variation
+        target: Math.round(totalSpend)
+      }));
+      setSpendingTrend(trendData);
+
+      // Generate monthly comparison
+      const comparisonData = categoryData.map(cat => ({
+        category: cat.category,
+        thisMonth: cat.amount,
+        lastMonth: Math.round(cat.amount * (0.9 + Math.random() * 0.2)) // Simulate last month
+      }));
+      setMonthlyComparison(comparisonData);
+
+      // Check for duplicate services
+      const serviceNames = subscriptions.map(sub => sub.name.toLowerCase());
+      const duplicates = serviceNames.filter((name, index) => serviceNames.indexOf(name) !== index);
+      
+      if (duplicates.length > 0) {
+        newInsights.push({
+          type: "savings",
+          title: "Duplicate Services Detected",
+          description: `You have duplicate services. Consider consolidating to save money.`,
+          impact: "Potential savings",
+          status: "warning"
+        });
+      }
+
+      // Check for high spending
+      if (totalSpend > 100) {
+        newInsights.push({
+          type: "trend",
+          title: "High Monthly Spending",
+          description: `Your monthly subscription spend is $${totalSpend.toFixed(2)}. Consider reviewing your subscriptions.`,
+          impact: `$${totalSpend.toFixed(2)}/month`,
+          status: "warning"
+        });
+      }
+
+      // Check for unused services (paused or cancelled)
+      const inactiveServices = subscriptions.filter(sub => sub.status !== "Active");
+      if (inactiveServices.length > 0) {
+        newInsights.push({
+          type: "optimization",
+          title: "Inactive Services",
+          description: `You have ${inactiveServices.length} inactive services. Consider cancelling them completely.`,
+          impact: "Clean up subscriptions",
+          status: "info"
+        });
+      }
+
+      // Budget achievement
+      if (totalSpend <= 50) {
+        newInsights.push({
+          type: "achievement",
+          title: "Good Spending Control",
+          description: "Your subscription spending is well managed. Keep it up!",
+          impact: "Under $50/month",
+          status: "success"
+        });
+      }
+
+      setInsights(newInsights);
+    }
+  }, [subscriptions]);
 
   const getInsightIcon = (type: string) => {
     switch (type) {
@@ -149,10 +212,19 @@ export default function Insights() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Monthly Spend</p>
-                <p className="text-2xl font-bold">$159.00</p>
+                <p className="text-2xl font-bold">
+                  ${subscriptions
+                    .filter(sub => sub.status === "Active")
+                    .reduce((total, sub) => {
+                      if (sub.billing === "Monthly") return total + sub.price;
+                      if (sub.billing === "Yearly") return total + (sub.price / 12);
+                      if (sub.billing === "Weekly") return total + (sub.price * 4);
+                      return total;
+                    }, 0).toFixed(2)}
+                </p>
                 <p className="text-xs text-success flex items-center mt-1">
                   <TrendingDown className="h-3 w-3 mr-1" />
-                  -5.2% vs last month
+                  Based on active subscriptions
                 </p>
               </div>
               <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -167,10 +239,21 @@ export default function Insights() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Avg. per Service</p>
-                <p className="text-2xl font-bold">$13.25</p>
+                <p className="text-2xl font-bold">
+                  ${subscriptions.length > 0 
+                    ? (subscriptions
+                        .filter(sub => sub.status === "Active")
+                        .reduce((total, sub) => {
+                          if (sub.billing === "Monthly") return total + sub.price;
+                          if (sub.billing === "Yearly") return total + (sub.price / 12);
+                          if (sub.billing === "Weekly") return total + (sub.price * 4);
+                          return total;
+                        }, 0) / subscriptions.filter(sub => sub.status === "Active").length).toFixed(2)
+                    : "0.00"}
+                </p>
                 <p className="text-xs text-warning flex items-center mt-1">
                   <TrendingUp className="h-3 w-3 mr-1" />
-                  +2.1% vs last month
+                  Average per active service
                 </p>
               </div>
               <div className="h-12 w-12 rounded-lg bg-info/10 flex items-center justify-center">
@@ -185,8 +268,17 @@ export default function Insights() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Potential Savings</p>
-                <p className="text-2xl font-bold">$21.99</p>
-                <p className="text-xs text-muted-foreground">Per month</p>
+                <p className="text-2xl font-bold">
+                  ${subscriptions
+                    .filter(sub => sub.status !== "Active")
+                    .reduce((total, sub) => {
+                      if (sub.billing === "Monthly") return total + sub.price;
+                      if (sub.billing === "Yearly") return total + (sub.price / 12);
+                      if (sub.billing === "Weekly") return total + (sub.price * 4);
+                      return total;
+                    }, 0).toFixed(2)}
+                </p>
+                <p className="text-xs text-muted-foreground">From inactive services</p>
               </div>
               <div className="h-12 w-12 rounded-lg bg-success/10 flex items-center justify-center">
                 <TrendingDown className="h-6 w-6 text-success" />
@@ -199,9 +291,9 @@ export default function Insights() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Budget Usage</p>
-                <p className="text-2xl font-bold">79.5%</p>
-                <p className="text-xs text-success">$41 remaining</p>
+                <p className="text-sm font-medium text-muted-foreground">Active Services</p>
+                <p className="text-2xl font-bold">{subscriptions.filter(sub => sub.status === "Active").length}</p>
+                <p className="text-xs text-success">Active subscriptions</p>
               </div>
               <div className="h-12 w-12 rounded-lg bg-warning/10 flex items-center justify-center">
                 <PieChart className="h-6 w-6 text-warning" />

@@ -1,8 +1,111 @@
-# Welcome to your Lovable project
+# BillWise Control Center - Subscription Tracker
 
-## Project info
+A comprehensive subscription management application built with React, TypeScript, and Firebase.
 
-**URL**: https://lovable.dev/projects/ea11ea8f-448a-4729-bd24-4340a8f82603
+## Features
+
+### ✅ Authentication
+- **Email/Password Authentication**: Sign up, sign in, and password reset
+- **Google Authentication**: Sign in and sign up with Google
+- **Protected Routes**: Secure access to dashboard features
+- **User Profile Management**: Update profile information
+
+### ✅ Subscription Management
+- **Add Subscriptions**: Complete form with all subscription details
+- **View Subscriptions**: Table and card view with filtering and search
+- **Edit Subscriptions**: Update subscription status and details
+- **Delete Subscriptions**: Remove subscriptions with confirmation
+- **Real-time Data**: Live updates from Firebase Firestore
+
+### ✅ Dashboard & Analytics
+- **Real-time Stats**: Live subscription counts and spending
+- **Monthly Spend Tracking**: Automatic calculation of monthly costs
+- **Upcoming Bills**: Track payment reminders
+- **Dynamic Charts**: Visual representation of spending data
+
+### ✅ Reminders System
+- **Add Reminders**: Create payment reminders for subscriptions
+- **Manage Reminders**: View, edit, and delete reminders
+- **Status Tracking**: Track reminder status (Pending, Sent, Dismissed)
+- **Due Date Alerts**: Never miss a payment
+
+### ✅ Insights & Analytics
+- **Smart Insights**: AI-powered recommendations for subscription optimization
+- **Spending Analysis**: Detailed breakdown of subscription costs
+- **Duplicate Detection**: Identify and consolidate duplicate services
+- **Budget Tracking**: Monitor spending against budget goals
+
+### ✅ Settings & Profile
+- **User Profile**: Update personal information and preferences
+- **Notification Settings**: Configure email and push notifications
+- **Theme Toggle**: Light and dark mode support
+- **Data Export**: Export subscription data
+
+## Technology Stack
+
+- **Frontend**: React 18, TypeScript, Vite
+- **UI Components**: shadcn/ui, Tailwind CSS
+- **Authentication**: Firebase Auth
+- **Database**: Firebase Firestore
+- **State Management**: React Context, Custom Hooks
+- **Charts**: Recharts
+- **Icons**: Lucide React
+
+## Getting Started
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd billwise-control-center
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Start development server**
+   ```bash
+   npm run dev
+   ```
+
+4. **Open your browser**
+   Navigate to `http://localhost:5173`
+
+## Firebase Configuration
+
+The application is configured with Firebase for:
+- User authentication (email/password + Google)
+- Real-time data storage (Firestore)
+- File storage (Firebase Storage)
+- Analytics (Firebase Analytics)
+
+## Project Structure
+
+```
+src/
+├── components/          # Reusable UI components
+│   ├── ui/            # shadcn/ui components
+│   ├── layout/        # Layout components
+│   └── modals/        # Modal components
+├── contexts/          # React contexts
+├── hooks/             # Custom React hooks
+├── lib/               # Firebase configuration and services
+├── pages/             # Application pages
+│   └── auth/          # Authentication pages
+└── styles/            # Global styles
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License.
 
 ## How can I edit this code?
 

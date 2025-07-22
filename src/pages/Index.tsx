@@ -4,7 +4,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">SubTracker</h1>
+        <h1 className="text-4xl font-bold mb-4">Klyra</h1>
         <p className="text-xl text-muted-foreground">Your subscription management dashboard is ready!</p>
         <div className="mt-6 space-x-4">
           <a href="/app" className="premium-button inline-flex items-center px-6 py-3 rounded-lg">

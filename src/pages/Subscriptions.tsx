@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,69 +35,27 @@ import {
   Calendar,
   DollarSign
 } from "lucide-react";
-
-// Mock subscription data
-const subscriptions = [
-  {
-    id: "1",
-    name: "Netflix", 
-    category: "Entertainment",
-    price: 15.99,
-    billing: "Monthly",
-    nextDue: "2024-01-15",
-    status: "Active",
-    logo: "N"
-  },
-  {
-    id: "2", 
-    name: "Spotify Premium",
-    category: "Entertainment", 
-    price: 9.99,
-    billing: "Monthly",
-    nextDue: "2024-01-18",
-    status: "Active",
-    logo: "S"
-  },
-  {
-    id: "3",
-    name: "Adobe Creative Cloud",
-    category: "Productivity",
-    price: 52.99,
-    billing: "Monthly", 
-    nextDue: "2024-01-20",
-    status: "Active",
-    logo: "A"
-  },
-  {
-    id: "4",
-    name: "Google Drive",
-    category: "Storage",
-    price: 9.99,
-    billing: "Monthly",
-    nextDue: "2024-01-25",
-    status: "Active", 
-    logo: "G"
-  },
-  {
-    id: "5",
-    name: "Figma Pro",
-    category: "Productivity",
-    price: 12.00,
-    billing: "Monthly",
-    nextDue: "2024-01-30",
-    status: "Paused",
-    logo: "F"
-  }
-];
+import { useAuthContext } from "@/contexts/AuthContext";
+import { useSubscriptions } from "@/hooks/use-firebase";
+import { useToast } from "@/hooks/use-toast";
+import { AddSubscriptionModal } from "@/components/AddSubscriptionModal";
+import { EditSubscriptionModal } from "@/components/EditSubscriptionModal";
+import { ViewSubscriptionModal } from "@/components/ViewSubscriptionModal";
+import { getSubscriptionLogo, getSubscriptionInitials, getSubscriptionColor } from "@/lib/subscription-logos";
 
 const categories = ["All", "Entertainment", "Productivity", "Storage", "Other"];
 const statuses = ["All", "Active", "Paused", "Cancelled"];
 
 export default function Subscriptions() {
+  const { user } = useAuthContext();
+  const { subscriptions, loading, deleteSubscription, updateSubscription } = useSubscriptions(user?.uid || null);
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
+
+
 
   const filteredSubscriptions = subscriptions.filter(sub => {
     const matchesSearch = sub.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -106,6 +64,38 @@ export default function Subscriptions() {
     
     return matchesSearch && matchesCategory && matchesStatus;
   });
+
+  const handleDeleteSubscription = async (id: string) => {
+    try {
+      await deleteSubscription(id);
+      toast({
+        title: "Subscription deleted",
+        description: "The subscription has been successfully removed.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete subscription. Please try again.",
+      });
+    }
+  };
+
+  const handleUpdateStatus = async (id: string, newStatus: "Active" | "Paused" | "Cancelled") => {
+    try {
+      await updateSubscription(id, { status: newStatus });
+      toast({
+        title: "Status updated",
+        description: "The subscription status has been updated.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update subscription status. Please try again.",
+      });
+    }
+  };
 
   const totalMonthlySpend = filteredSubscriptions
     .filter(sub => sub.status === "Active")
@@ -139,10 +129,7 @@ export default function Subscriptions() {
           </p>
         </div>
         
-        <Button className="premium-button">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Subscription
-        </Button>
+        {user?.uid && <AddSubscriptionModal userId={user.uid} />}
       </div>
 
       {/* Stats */}
@@ -281,8 +268,18 @@ export default function Subscriptions() {
                   <TableRow key={subscription.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-white font-semibold">
-                          {subscription.logo}
+                        <div className={`h-8 w-8 rounded-lg flex items-center justify-center text-white font-semibold ${getSubscriptionColor(subscription.name)}`}>
+                          <img 
+                            src={getSubscriptionLogo(subscription.name)} 
+                            alt={subscription.name}
+                            className="h-5 w-5 object-contain"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              target.nextElementSibling?.classList.remove('hidden');
+                            }}
+                          />
+                          <span className="text-xs hidden">{getSubscriptionInitials(subscription.name)}</span>
                         </div>
                         {subscription.name}
                       </div>
@@ -304,15 +301,12 @@ export default function Subscriptions() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Eye className="mr-2 h-4 w-4" />
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
+                          <EditSubscriptionModal subscription={subscription} userId={user?.uid || ""} />
+                          <ViewSubscriptionModal subscription={subscription} />
+                          <DropdownMenuItem 
+                            className="text-destructive"
+                            onClick={() => handleDeleteSubscription(subscription.id!)}
+                          >
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete
                           </DropdownMenuItem>
@@ -332,8 +326,18 @@ export default function Subscriptions() {
               <CardContent className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center text-white font-bold">
-                      {subscription.logo}
+                    <div className={`h-12 w-12 rounded-lg flex items-center justify-center text-white font-bold ${getSubscriptionColor(subscription.name)}`}>
+                      <img 
+                        src={getSubscriptionLogo(subscription.name)} 
+                        alt={subscription.name}
+                        className="h-7 w-7 object-contain"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          target.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                      <span className="text-sm hidden">{getSubscriptionInitials(subscription.name)}</span>
                     </div>
                     <div>
                       <h3 className="font-semibold">{subscription.name}</h3>
@@ -347,15 +351,12 @@ export default function Subscriptions() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Eye className="mr-2 h-4 w-4" />
-                        View Details
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive">
+                      <EditSubscriptionModal subscription={subscription} userId={user?.uid || ""} />
+                      <ViewSubscriptionModal subscription={subscription} />
+                      <DropdownMenuItem 
+                        className="text-destructive"
+                        onClick={() => handleDeleteSubscription(subscription.id!)}
+                      >
                         <Trash2 className="mr-2 h-4 w-4" />
                         Delete
                       </DropdownMenuItem>

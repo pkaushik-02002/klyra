@@ -66,10 +66,7 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-border p-4">
         {state !== "collapsed" && (
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-              <CreditCard className="h-4 w-4 text-white" />
-            </div>
-            <span className="font-semibold text-lg">SubTracker</span>
+            <img src="/images/logos/Klyra-official-logo.png" alt="Klyra Logo" title="Klyra Logo" className="h-16 w-16 rounded-lg" />
           </div>
         )}
       </SidebarHeader>
