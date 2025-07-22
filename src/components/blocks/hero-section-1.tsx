@@ -38,7 +38,7 @@ export function HeroSection() {
                     <div className="h-[80rem] -translate-y-[350px] absolute left-0 top-0 w-56 -rotate-45 bg-[radial-gradient(50%_50%_at_50%_50%,hsl(var(--primary)/.04)_0,hsl(var(--primary)/.02)_80%,transparent_100%)]" />
                 </div>
                 <section>
-                    <div className="relative pt-24 md:pt-36">
+                    <div className="relative pt-16 sm:pt-24 md:pt-36">
                         <AnimatedGroup
                             variants={{
                                 container: {
@@ -74,42 +74,35 @@ export function HeroSection() {
                             />
                         </AnimatedGroup>
                         <div aria-hidden className="absolute inset-0 -z-10 size-full [background:radial-gradient(125%_125%_at_50%_100%,transparent_0%,var(--background)_75%)]" />
-                        <div className="mx-auto max-w-7xl px-6">
+                        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
                             <div className="text-center sm:mx-auto lg:mr-auto lg:mt-0">
                                 <AnimatedGroup variants={transitionVariants}>
                                     {/* Glass tube CTA with new text */}
-                                    <Link to="/docs" className="group mx-auto flex w-fit items-center gap-4 rounded-full border p-1 pl-4 h-12 shadow-md shadow-black/5 transition-all duration-300 hover:bg-muted/40 dark:border-t-white/5 dark:shadow-zinc-950 hover:scale-105" style={{ textDecoration: 'none' }}>
+                                    <Link to="/docs" className="group mx-auto mt-8 flex w-fit items-center gap-2 rounded-full border p-1 pl-4 h-12 shadow-md shadow-black/5 transition-all duration-300 hover:bg-muted/40 dark:border-t-white/5 dark:shadow-zinc-950 hover:scale-105" style={{ textDecoration: 'none' }}>
                                         <span className="text-foreground text-sm font-semibold">Take Control of Your Subscriptions</span>
-                                        <span className="dark:border-background block h-4 w-0.5 border-l bg-white dark:bg-zinc-700"></span>
-                                        <div className="bg-background group-hover:bg-muted size-6 overflow-hidden rounded-full duration-500">
-                                            <div className="flex w-12 -translate-x-1/2 duration-500 ease-in-out group-hover:translate-x-0">
-                                                <span className="flex size-6">
-                                                    <ArrowRight className="m-auto size-3" />
-                                                </span>
-                                                <span className="flex size-6">
-                                                    <ArrowRight className="m-auto size-3" />
-                                                </span>
-                                            </div>
+                                        <span className="block h-6 w-px mx-1 bg-border dark:bg-zinc-700" />
+                                        <div className="bg-background group-hover:bg-muted size-6 overflow-hidden rounded-full duration-500 flex items-center justify-center">
+                                            <ArrowRight className="m-auto size-4" />
                                         </div>
                                     </Link>
                                     {/* Main headline */}
-                                    <h1 className="mt-8 max-w-4xl mx-auto text-balance text-5xl md:text-7xl lg:mt-8 xl:text-[4rem] font-bold">
+                                    <h1 className="mt-8 max-w-2xl mx-auto text-balance text-3xl sm:text-4xl md:text-5xl lg:mt-8 xl:text-6xl font-bold">
                                         Track, Save, and Stay in Control
                                     </h1>
-                                    <p className="mx-auto mt-8 max-w-2xl text-balance text-lg">
+                                    <p className="mx-auto mt-6 max-w-xl text-balance text-base sm:text-lg">
                                         Easily track, manage, and save on all your recurring expenses. Never miss a renewal again.
                                     </p>
                                 </AnimatedGroup>
                                 {/* Premium CTA buttons */}
-                                <div className="mt-12 flex flex-col items-center justify-center gap-4 md:flex-row">
-                                    <div className="bg-gradient-to-r from-primary to-purple-500 rounded-xl shadow-lg p-1">
+                                <div className="mt-8 flex flex-col items-center justify-center gap-3 w-full sm:gap-4 md:flex-row">
+                                    <div className="bg-gradient-to-r from-primary to-purple-500 rounded-xl shadow-lg p-1 w-full md:w-auto">
                                         <Button
                                             asChild
                                             size="lg"
-                                            className="rounded-xl px-8 py-4 text-lg font-bold bg-gradient-to-r from-primary to-purple-500 text-white shadow-lg hover:scale-105 transition-transform duration-200 border-0"
+                                            className="rounded-xl w-full md:w-auto px-6 py-3 text-base md:text-lg font-bold bg-gradient-to-r from-primary to-purple-500 text-white shadow-lg hover:scale-105 transition-transform duration-200 border-0"
                                         >
                                             <Link to="/signup">
-                                                <span className="flex items-center gap-2">
+                                                <span className="flex items-center gap-2 justify-center">
                                                     Start Free
                                                     <ArrowRight className="ml-1 h-5 w-5" />
                                                 </span>
@@ -120,7 +113,7 @@ export function HeroSection() {
                                         asChild
                                         size="lg"
                                         variant="outline"
-                                        className="rounded-xl px-8 py-4 text-lg font-bold border-2 border-primary/60 bg-background/70 backdrop-blur-md hover:bg-primary/10 transition-all duration-200"
+                                        className="rounded-xl w-full md:w-auto px-6 py-3 text-base md:text-lg font-bold border-2 border-primary/60 bg-background/70 backdrop-blur-md hover:bg-primary/10 transition-all duration-200"
                                     >
                                         <Link to="/pricing">
                                             See Pricing
@@ -141,18 +134,18 @@ export function HeroSection() {
                                 },
                                 ...transitionVariants,
                             }}>
-                            <div className="relative -mr-56 mt-8 overflow-hidden px-2 sm:mr-0 sm:mt-12 md:mt-20">
+                            <div className="relative mt-8 sm:mr-0 sm:mt-12 md:mt-20 px-2">
                                 <div aria-hidden className="bg-gradient-to-b to-background absolute inset-0 z-10 from-transparent from-35%" />
-                                <div className="inset-shadow-2xs ring-background dark:inset-shadow-white/20 bg-background relative mx-auto max-w-6xl overflow-hidden rounded-2xl border p-4 shadow-lg shadow-zinc-950/15 ring-1">
+                                <div className="inset-shadow-2xs ring-background dark:inset-shadow-white/20 bg-background relative mx-auto w-full max-w-2xl sm:max-w-4xl md:max-w-6xl overflow-hidden rounded-2xl border p-2 sm:p-4 shadow-lg shadow-zinc-950/15 ring-1">
                                     <img
-                                        className="bg-background aspect-15/8 relative hidden rounded-2xl dark:block"
+                                        className="bg-background aspect-[15/8] relative hidden rounded-2xl dark:block w-full"
                                         src="https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=1500&q=80"
                                         alt="app screen"
                                         width="2700"
                                         height="1440"
                                     />
                                     <img
-                                        className="z-2 border-border/25 aspect-15/8 relative rounded-2xl border dark:hidden"
+                                        className="z-2 border-border/25 aspect-[15/8] relative rounded-2xl border dark:hidden w-full"
                                         src="https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=1500&q=80"
                                         alt="app screen"
                                         width="2700"
@@ -163,15 +156,15 @@ export function HeroSection() {
                         </AnimatedGroup>
                     </div>
                 </section>
-                <section className="bg-background pb-16 pt-16 md:pb-32">
-                    <div className="group relative m-auto max-w-5xl px-6">
+                <section className="bg-background pb-12 pt-12 md:pb-32 md:pt-16">
+                    <div className="group relative m-auto w-full max-w-2xl sm:max-w-3xl md:max-w-5xl px-4 sm:px-6">
                         <div className="absolute inset-0 z-10 flex scale-95 items-center justify-center opacity-0 duration-500 group-hover:scale-100 group-hover:opacity-100">
                             <Link to="/contact" className="block text-sm duration-150 hover:opacity-75">
                                 <span> Meet Our Customers</span>
                                 <ChevronRight className="ml-1 inline-block size-3" />
                             </Link>
                         </div>
-                        <div className="group-hover:blur-xs mx-auto mt-12 grid max-w-2xl grid-cols-4 gap-x-12 gap-y-8 transition-all duration-500 group-hover:opacity-50 sm:gap-x-16 sm:gap-y-14">
+                        <div className="group-hover:blur-xs mx-auto mt-8 grid max-w-xs grid-cols-2 sm:max-w-2xl sm:grid-cols-4 gap-x-6 gap-y-6 sm:gap-x-12 sm:gap-y-14">
                             {/* You can update these logos to your partners or remove them */}
                             <div className="flex">
                                 <img className="mx-auto h-5 w-fit dark:invert" src="/images/logos/netflix.png" alt="Netflix Logo" height="20" width="auto" />

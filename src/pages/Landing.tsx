@@ -22,7 +22,6 @@ import { Footer7 } from "@/components/ui/footer-7";
 
 // Drawer for mobile nav
 function MobileNavDrawer({ open, onClose, onNavigate, theme, setTheme }) {
-  // Prevent background scroll when drawer is open
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -98,50 +97,71 @@ export default function Landing() {
       />
 
       {/* Features Section */}
-      <section id="features" className="py-20 bg-muted/30">
+      <section id="features" className="py-12 md:py-20 bg-muted/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Features</h2>
-            <p className="text-lg text-muted-foreground">Discover what makes Klyra the best way to manage your subscriptions.</p>
+          <div className="text-center mb-10 md:mb-16">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">Features</h2>
+            <p className="text-base md:text-lg text-muted-foreground">Discover what makes Klyra the best way to manage your subscriptions.</p>
           </div>
-          <FeaturesSectionWithHoverEffects />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
+            <div className="flex flex-col items-center text-center bg-white dark:bg-neutral-900 rounded-xl p-6 shadow-md">
+              <Star className="h-8 w-8 text-yellow-400 mb-2" />
+              <h3 className="font-semibold text-lg mb-1">Intuitive & Beautiful Design</h3>
+              <p className="text-muted-foreground text-sm">Enjoy a seamless, delightful experience on any device—mobile, tablet, or desktop.</p>
+            </div>
+            <div className="flex flex-col items-center text-center bg-white dark:bg-neutral-900 rounded-xl p-6 shadow-md">
+              <CheckCircle className="h-8 w-8 text-green-500 mb-2" />
+              <h3 className="font-semibold text-lg mb-1">No More Surprises</h3>
+              <p className="text-muted-foreground text-sm">Stay ahead of renewals and price hikes. Klyra keeps you informed and in control.</p>
+            </div>
+            <div className="flex flex-col items-center text-center bg-white dark:bg-neutral-900 rounded-xl p-6 shadow-md">
+              <BarChart className="h-8 w-8 text-primary mb-2" />
+              <h3 className="font-semibold text-lg mb-1">Actionable Insights</h3>
+              <p className="text-muted-foreground text-sm">Get smart analytics to optimize your spending and discover where you can save.</p>
+            </div>
+            <div className="flex flex-col items-center text-center bg-white dark:bg-neutral-900 rounded-xl p-6 shadow-md">
+              <Shield className="h-8 w-8 text-primary mb-2" />
+              <h3 className="font-semibold text-lg mb-1">Trusted & Secure</h3>
+              <p className="text-muted-foreground text-sm">We use industry-leading security to protect your data. Your privacy is never compromised.</p>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Why Choose Us Section */}
-      <section id="why-choose" className="py-20">
+      <section id="why-choose" className="py-12 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Why Choose Klyra?</h2>
-            <p className="text-lg text-muted-foreground">We go beyond tracking. Here’s why users love Klyra.</p>
+          <div className="text-center mb-10 md:mb-16">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">Why Choose Klyra?</h2>
+            <p className="text-base md:text-lg text-muted-foreground">We go beyond tracking. Here’s why users love Klyra.</p>
           </div>
-          <div className="grid md:grid-cols-2 gap-10 max-w-4xl mx-auto">
-            <div className="flex items-start gap-4">
-              <Star className="h-8 w-8 text-yellow-400 mt-1" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-10 max-w-4xl mx-auto">
+            <div className="flex items-start gap-4 p-4 bg-white dark:bg-neutral-900 rounded-xl shadow-md">
+              <Star className="h-7 w-7 md:h-8 md:w-8 text-yellow-400 mt-1" />
               <div>
-                <h3 className="font-semibold text-lg mb-1">Intuitive & Beautiful Design</h3>
-                <p className="text-muted-foreground">Enjoy a seamless, delightful experience on any device—mobile, tablet, or desktop.</p>
+                <h3 className="font-semibold text-base md:text-lg mb-1">Intuitive & Beautiful Design</h3>
+                <p className="text-sm md:text-base text-muted-foreground">Enjoy a seamless, delightful experience on any device—mobile, tablet, or desktop.</p>
               </div>
             </div>
-            <div className="flex items-start gap-4">
-              <CheckCircle className="h-8 w-8 text-green-500 mt-1" />
+            <div className="flex items-start gap-4 p-4 bg-white dark:bg-neutral-900 rounded-xl shadow-md">
+              <CheckCircle className="h-7 w-7 md:h-8 md:w-8 text-green-500 mt-1" />
               <div>
-                <h3 className="font-semibold text-lg mb-1">No More Surprises</h3>
-                <p className="text-muted-foreground">Stay ahead of renewals and price hikes. Klyra keeps you informed and in control.</p>
+                <h3 className="font-semibold text-base md:text-lg mb-1">No More Surprises</h3>
+                <p className="text-sm md:text-base text-muted-foreground">Stay ahead of renewals and price hikes. Klyra keeps you informed and in control.</p>
               </div>
             </div>
-            <div className="flex items-start gap-4">
-              <BarChart className="h-8 w-8 text-primary mt-1" />
+            <div className="flex items-start gap-4 p-4 bg-white dark:bg-neutral-900 rounded-xl shadow-md">
+              <BarChart className="h-7 w-7 md:h-8 md:w-8 text-primary mt-1" />
               <div>
-                <h3 className="font-semibold text-lg mb-1">Actionable Insights</h3>
-                <p className="text-muted-foreground">Get smart analytics to optimize your spending and discover where you can save.</p>
+                <h3 className="font-semibold text-base md:text-lg mb-1">Actionable Insights</h3>
+                <p className="text-sm md:text-base text-muted-foreground">Get smart analytics to optimize your spending and discover where you can save.</p>
               </div>
             </div>
-            <div className="flex items-start gap-4">
-              <Shield className="h-8 w-8 text-primary mt-1" />
+            <div className="flex items-start gap-4 p-4 bg-white dark:bg-neutral-900 rounded-xl shadow-md">
+              <Shield className="h-7 w-7 md:h-8 md:w-8 text-primary mt-1" />
               <div>
-                <h3 className="font-semibold text-lg mb-1">Trusted & Secure</h3>
-                <p className="text-muted-foreground">We use industry-leading security to protect your data. Your privacy is never compromised.</p>
+                <h3 className="font-semibold text-base md:text-lg mb-1">Trusted & Secure</h3>
+                <p className="text-sm md:text-base text-muted-foreground">We use industry-leading security to protect your data. Your privacy is never compromised.</p>
               </div>
             </div>
           </div>
@@ -149,44 +169,48 @@ export default function Landing() {
       </section>
 
       {/* Testimonials */}
-      <TestimonialsSection
-        title="Loved by users worldwide"
-        description="Join thousands who trust Klyra to manage their subscriptions and save money."
-        testimonials={[
-          {
-            author: {
-              name: "Priya Sharma",
-              handle: "@priyasharma",
-              avatar: "https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=150&h=150&fit=crop&crop=face"
+      <section id="testimonials" className="py-12 md:py-20">
+        <TestimonialsSection
+          title="Loved by users worldwide"
+          description="Join thousands who trust Klyra to manage their subscriptions and save money."
+          testimonials={[
+            {
+              author: {
+                name: "Priya Sharma",
+                handle: "@priyasharma",
+                avatar: "https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=150&h=150&fit=crop&crop=face"
+              },
+              text: "Klyra helped me discover and cancel 3 forgotten subscriptions. The reminders are a lifesaver!"
             },
-            text: "Klyra helped me discover and cancel 3 forgotten subscriptions. The reminders are a lifesaver!"
-          },
-          {
-            author: {
-              name: "Alex Kim",
-              handle: "@alexkim",
-              avatar: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=150&h=150&fit=crop&crop=face"
+            {
+              author: {
+                name: "Alex Kim",
+                handle: "@alexkim",
+                avatar: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=150&h=150&fit=crop&crop=face"
+              },
+              text: "The dashboard is so clean and easy to use. I love seeing all my subscriptions in one place with Klyra."
             },
-            text: "The dashboard is so clean and easy to use. I love seeing all my subscriptions in one place with Klyra."
-          },
-          {
-            author: {
-              name: "Maria Garcia",
-              handle: "@mariagarcia",
-              avatar: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=150&h=150&fit=crop&crop=face"
-            },
-            text: "I never miss a renewal now. Klyra's notifications are always on time!"
-          }
-        ]}
-      />
+            {
+              author: {
+                name: "Maria Garcia",
+                handle: "@mariagarcia",
+                avatar: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=150&h=150&fit=crop&crop=face"
+              },
+              text: "I never miss a renewal now. Klyra's notifications are always on time!"
+            }
+          ]}
+        />
+      </section>
 
       {/* Newsletter Section */}
-      <CTASection
-        badge={{ text: "Ready to save?" }}
-        title="Start taking control of your subscriptions"
-        description="Sign up and never miss a renewal again."
-        action={{ text: "Get Started", href: "/signup" }}
-      />
+      <section id="newsletter" className="py-12 md:py-20">
+        <CTASection
+          badge={{ text: "Ready to save?" }}
+          title="Start taking control of your subscriptions"
+          description="Sign up and never miss a renewal again."
+          action={{ text: "Get Started", href: "/signup" }}
+        />
+      </section>
 
       {/* Footer */}
       <Footer7 />
